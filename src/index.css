@@ -2,10 +2,36 @@
 
 @layer base {
   body {
-    background-color: #f8fafc;
-    color: #0f172a;
+    background-color: #fafaf9;
+    color: #1c1917;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/* React Toastify Orange Theme Customization */
+:root {
+  --toastify-color-info: #ea580c;
+  --toastify-color-success: #c2410c;
+  --toastify-icon-color-info: #ffffff;
+  --toastify-icon-color-success: #ffffff;
+}
+
+.Toastify__toast--info,
+.Toastify__toast--success,
+.Toastify__toast--colored.Toastify__toast--info,
+.Toastify__toast--colored.Toastify__toast--success {
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.3) !important;
+  font-family: inherit !important;
+}
+
+.Toastify__progress-bar--info,
+.Toastify__progress-bar--success,
+.Toastify__progress-bar--colored.Toastify__progress-bar--info,
+.Toastify__progress-bar--colored.Toastify__progress-bar--success {
+  background: #ffedd5 !important;
 }

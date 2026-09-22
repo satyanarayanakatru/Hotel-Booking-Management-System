@@ -1,159 +1,493 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import {
-  User,
-  Mail,
-  ShieldCheck,
-  Calendar,
+  dashboardStats,
+  revenueSummary,
+  recentBookings
+} from '../data/mockDashboardData'
+import DashboardCharts from '../components/DashboardCharts'
+import {
   BedDouble,
-  Sparkles,
-  Award,
+  CheckCircle2,
+  Users,
+  LogIn,
   LogOut,
-  ChevronRight
+  CalendarCheck,
+  DollarSign,
+  TrendingUp,
+  Search,
+  ArrowRight,
+  UserPlus,
+  BarChart3,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react'
 
 const Dashboard = () => {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchTerm, setSearchTerm] = useState('')
 
-  const handleLogout = () => {
-    logout()
-    toast.info('Logged out successfully.')
-    navigate('/login')
+  const handleRefresh = () => {
+    toast.success('Dashboard analytics refreshed successfully!')
   }
 
-  const joinedDate = user?.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      })
-    : 'Recently'
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value)
+  }
+
+  const handleActionClick = (title, path) => {
+    toast.info(`Opening ${title}...`)
+    navigate(path)
+  }
+
+  const filteredBookings = recentBookings.filter(
+    (b) =>
+      b.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.roomNumber.includes(searchTerm)
+  )
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'Checked-In':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+      case 'Confirmed':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'Pending':
+        return 'bg-amber-100 text-amber-800 border-amber-200'
+      case 'Checked-Out':
+        return 'bg-stone-100 text-stone-700 border-stone-200'
+      default:
+        return 'bg-stone-100 text-stone-700 border-stone-200'
+    }
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       
-      {/* Welcome Hero Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* 1. Welcome Hero Banner */}
+      <div className="bg-gradient-to-r from-stone-900 via-orange-950 to-stone-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center space-x-2 bg-blue-500/20 px-3 py-1 rounded-full text-blue-300 text-xs font-semibold mb-3 border border-blue-400/20">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Authentication Module Active</span>
+            <div className="inline-flex items-center space-x-2 bg-orange-500/20 px-3 py-1 rounded-full text-orange-300 text-xs font-semibold mb-3 border border-orange-400/20">
+              <Sparkles className="h-3.5 w-3.5 text-orange-400" />
+              <span>Module 1 & 2 • Grid Layout System</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               Welcome back, {user?.fullName}!
             </h1>
-            <p className="text-slate-300 text-sm mt-1 max-w-xl">
-              You are currently logged into the GrandVista Hotel Booking Management System.
+            <p className="text-stone-300 text-sm mt-1 max-w-xl">
+              Real-time analytics and reservation metrics across GrandVista Hotel.
             </p>
           </div>
           <div className="flex items-center space-x-3">
-            <Link
-              to="/profile"
-              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md flex items-center space-x-2"
-            >
-              <User className="h-4 w-4" />
-              <span>Edit Profile</span>
-            </Link>
             <button
-              onClick={handleLogout}
-              className="bg-slate-800 hover:bg-red-600/90 text-slate-300 hover:text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border border-slate-700 flex items-center space-x-2"
+              onClick={handleRefresh}
+              className="bg-stone-800 hover:bg-stone-700 text-stone-200 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all border border-stone-700 flex items-center space-x-1.5"
             >
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
+              <RefreshCw className="h-4 w-4 text-orange-400" />
+              <span>Refresh Stats</span>
+            </button>
+            <button
+              onClick={() => handleActionClick('New Booking', '/bookings')}
+              className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-md shadow-orange-600/30 flex items-center space-x-2"
+            >
+              <CalendarCheck className="h-4 w-4" />
+              <span>New Reservation</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* User Session Info Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
-        <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center space-x-2">
-          <ShieldCheck className="h-5 w-5 text-blue-600" />
-          <span>Session Details (Stored in LocalStorage)</span>
-        </h2>
+      {/* 2. 8 Primary Metrics Cards Grid (4 Columns x 2 Rows) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-            <div className="flex items-center space-x-2 text-slate-500 text-xs font-semibold">
-              <User className="h-4 w-4 text-blue-500" />
-              <span>Full Name</span>
-            </div>
-            <div className="text-sm font-bold text-slate-800">{user?.fullName}</div>
-          </div>
-
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-            <div className="flex items-center space-x-2 text-slate-500 text-xs font-semibold">
-              <Mail className="h-4 w-4 text-blue-500" />
-              <span>Email Address</span>
-            </div>
-            <div className="text-sm font-bold text-slate-800 truncate">{user?.email}</div>
-          </div>
-
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-            <div className="flex items-center space-x-2 text-slate-500 text-xs font-semibold">
-              <Award className="h-4 w-4 text-blue-500" />
-              <span>Account Role</span>
-            </div>
-            <div className="inline-block px-2.5 py-0.5 bg-blue-100 text-blue-700 font-bold rounded-md text-xs">
-              {user?.role || 'Guest'}
+        {/* Total Rooms */}
+        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+              Total Rooms
+            </span>
+            <div className="p-2.5 bg-orange-50 text-orange-600 rounded-xl">
+              <BedDouble className="h-5 w-5" />
             </div>
           </div>
-
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-            <div className="flex items-center space-x-2 text-slate-500 text-xs font-semibold">
-              <Calendar className="h-4 w-4 text-blue-500" />
-              <span>Member Since</span>
-            </div>
-            <div className="text-sm font-bold text-slate-800">{joinedDate}</div>
+          <div className="mt-3 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold text-stone-900">
+              {dashboardStats.totalRooms}
+            </span>
+            <span className="text-xs text-stone-500 font-medium">Inventory</span>
           </div>
         </div>
+
+        {/* Available Rooms */}
+        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+              Available Rooms
+            </span>
+            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold text-emerald-600">
+              {dashboardStats.availableRooms}
+            </span>
+            <span className="text-xs text-emerald-600 font-semibold">Ready for check-in</span>
+          </div>
+        </div>
+
+        {/* Occupied Rooms */}
+        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+              Occupied Rooms
+            </span>
+            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+              <BedDouble className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold text-amber-600">
+              {dashboardStats.occupiedRooms}
+            </span>
+            <span className="text-xs text-stone-500 font-medium">
+              {dashboardStats.occupancyRate}% Occupancy
+            </span>
+          </div>
+        </div>
+
+        {/* Total Guests */}
+        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+              Total Guests
+            </span>
+            <div className="p-2.5 bg-stone-100 text-stone-700 rounded-xl">
+              <Users className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold text-stone-900">
+              {dashboardStats.totalGuests}
+            </span>
+            <span className="text-xs text-stone-500 font-medium">In-House Guests</span>
+          </div>
+        </div>
+
+        {/* Today's Check-Ins */}
+        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+              Today's Check-Ins
+            </span>
+            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+              <LogIn className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold text-blue-600">
+              {dashboardStats.todayCheckIns}
+            </span>
+            <span className="text-xs text-stone-500 font-medium">Scheduled Today</span>
+          </div>
+        </div>
+
+        {/* Today's Check-Outs */}
+        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+              Today's Check-Outs
+            </span>
+            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
+              <LogOut className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold text-purple-600">
+              {dashboardStats.todayCheckOuts}
+            </span>
+            <span className="text-xs text-stone-500 font-medium">Pending Departure</span>
+          </div>
+        </div>
+
+        {/* Total Bookings */}
+        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+              Total Bookings
+            </span>
+            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+              <CalendarCheck className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold text-stone-900">
+              {dashboardStats.totalBookings}
+            </span>
+            <span className="text-xs text-emerald-600 font-semibold">+12% this month</span>
+          </div>
+        </div>
+
+        {/* Total Revenue Summary */}
+        <div className="bg-white p-5 rounded-2xl border border-orange-200 shadow-2xs hover:shadow-md transition-shadow bg-gradient-to-br from-white to-orange-50/50">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-orange-950 uppercase tracking-wider">
+              Total Revenue
+            </span>
+            <div className="p-2.5 bg-orange-600 text-white rounded-xl shadow-md shadow-orange-600/30">
+              <DollarSign className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold text-orange-600">
+              ${dashboardStats.totalRevenue.toLocaleString()}
+            </span>
+            <span className="text-xs text-orange-700 font-semibold flex items-center">
+              <TrendingUp className="h-3 w-3 mr-0.5" />
+              Monthly
+            </span>
+          </div>
+        </div>
+
       </div>
 
-      {/* Overview Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Upcoming Bookings
-            </p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1">2 Suites</p>
-            <p className="text-xs text-emerald-600 font-medium mt-1">✓ Confirmed & Check-in ready</p>
+      {/* 3. Combined Grid: Key Performance Charts + Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Key Performance Charts (8 Cols) */}
+        <div className="lg:col-span-8">
+          <DashboardCharts />
+        </div>
+
+        {/* Quick Actions Stack (4 Cols) */}
+        <div className="lg:col-span-4 flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-stone-900 tracking-tight">
+              Quick Actions
+            </h2>
+            <span className="text-xs text-stone-400 font-semibold">Shortcuts</span>
           </div>
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
-            <BedDouble className="h-8 w-8" />
+
+          <div className="flex-1 grid grid-cols-1 gap-3">
+            <button
+              onClick={() => handleActionClick('New Booking', '/bookings')}
+              className="p-4 bg-white rounded-2xl border border-stone-200 hover:border-orange-500 shadow-2xs hover:shadow-md transition-all group flex items-center justify-between text-left"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-orange-600 text-white rounded-xl shadow-md shadow-orange-600/30 group-hover:scale-105 transition-transform">
+                  <CalendarCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-stone-900 text-xs group-hover:text-orange-600 transition-colors">
+                    New Booking
+                  </h3>
+                  <p className="text-stone-500 text-[11px]">Reserve room for guest</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-orange-600 group-hover:translate-x-1 transition-transform" />
+            </button>
+
+            <button
+              onClick={() => handleActionClick('Guest Registration', '/guests')}
+              className="p-4 bg-white rounded-2xl border border-stone-200 hover:border-orange-500 shadow-2xs hover:shadow-md transition-all group flex items-center justify-between text-left"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-amber-600 text-white rounded-xl shadow-md shadow-amber-600/30 group-hover:scale-105 transition-transform">
+                  <UserPlus className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-stone-900 text-xs group-hover:text-amber-600 transition-colors">
+                    Add Guest
+                  </h3>
+                  <p className="text-stone-500 text-[11px]">Register new profile</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-amber-600 group-hover:translate-x-1 transition-transform" />
+            </button>
+
+            <button
+              onClick={() => handleActionClick('Room Inventory', '/rooms')}
+              className="p-4 bg-white rounded-2xl border border-stone-200 hover:border-orange-500 shadow-2xs hover:shadow-md transition-all group flex items-center justify-between text-left"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-stone-800 text-white rounded-xl shadow-md shadow-stone-800/30 group-hover:scale-105 transition-transform">
+                  <BedDouble className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-stone-900 text-xs group-hover:text-stone-900 transition-colors">
+                    Room Inventory
+                  </h3>
+                  <p className="text-stone-500 text-[11px]">Manage rates & state</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-stone-800 group-hover:translate-x-1 transition-transform" />
+            </button>
+
+            <button
+              onClick={() => handleActionClick('Analytics & Reports', '/reports')}
+              className="p-4 bg-white rounded-2xl border border-stone-200 hover:border-orange-500 shadow-2xs hover:shadow-md transition-all group flex items-center justify-between text-left"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-orange-700 text-white rounded-xl shadow-md shadow-orange-700/30 group-hover:scale-105 transition-transform">
+                  <BarChart3 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-stone-900 text-xs group-hover:text-orange-700 transition-colors">
+                    View Reports
+                  </h3>
+                  <p className="text-stone-500 text-[11px]">Revenue & trend charts</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-orange-700 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+      </div>
+
+      {/* 4. Combined Grid: Revenue Summary & Category Share + Recent Bookings Table */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Revenue Summary & Category Share (4 Cols) */}
+        <div className="lg:col-span-4 bg-white rounded-3xl border border-stone-200 p-6 shadow-2xs flex flex-col justify-between space-y-5">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Loyalty Points
-            </p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1">1,450 pts</p>
-            <p className="text-xs text-blue-600 font-medium mt-1">Gold Tier Member</p>
-          </div>
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
-            <Award className="h-8 w-8" />
+            <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+              <h2 className="text-base font-bold text-stone-900 flex items-center space-x-2">
+                <TrendingUp className="h-5 w-5 text-orange-600" />
+                <span>Revenue & Pacing</span>
+              </h2>
+              <span className="px-2.5 py-0.5 bg-orange-100 text-orange-800 text-[10px] font-bold rounded-lg">
+                Summary
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 my-4">
+              <div className="p-3 bg-stone-50 rounded-2xl border border-stone-100">
+                <span className="text-[10px] font-semibold text-stone-500">Today</span>
+                <p className="text-base font-extrabold text-stone-900 mt-0.5">
+                  ${revenueSummary.daily.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-3 bg-stone-50 rounded-2xl border border-stone-100">
+                <span className="text-[10px] font-semibold text-stone-500">Weekly</span>
+                <p className="text-base font-extrabold text-stone-900 mt-0.5">
+                  ${revenueSummary.weekly.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-orange-50/60 rounded-2xl border border-orange-100 mb-4">
+              <span className="text-[10px] font-semibold text-orange-900">Monthly Target Pacing</span>
+              <p className="text-lg font-extrabold text-orange-600">
+                ${revenueSummary.monthly.toLocaleString()} / ${revenueSummary.projected.toLocaleString()}
+              </p>
+            </div>
+
+            {/* Room Share Progress */}
+            <div className="space-y-2.5">
+              <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                Category Share
+              </h3>
+              {revenueSummary.roomTypeRevenue.map((item) => (
+                <div key={item.type} className="space-y-1">
+                  <div className="flex justify-between text-[11px] font-semibold text-stone-700">
+                    <span>{item.type}</span>
+                    <span>${item.revenue.toLocaleString()} ({item.percentage}%)</span>
+                  </div>
+                  <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-orange-600 rounded-full transition-all duration-500"
+                      style={{ width: `${item.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Account Security
-            </p>
-            <p className="text-2xl font-extrabold text-emerald-600 mt-1">Protected</p>
-            <p className="text-xs text-slate-500 font-medium mt-1">Protected Route Guarded</p>
+        {/* Recent Bookings Table (8 Cols) */}
+        <div className="lg:col-span-8 bg-white rounded-3xl border border-stone-200 p-6 shadow-2xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-stone-900">Recent Bookings</h2>
+              <p className="text-stone-500 text-xs mt-0.5">Latest room reservations & check-in status</p>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+              <input
+                type="text"
+                placeholder="Search guest or booking ID..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-full pl-9 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
+              />
+            </div>
           </div>
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
-            <ShieldCheck className="h-8 w-8" />
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-stone-700">
+              <thead className="bg-stone-50 border-y border-stone-200 text-stone-500 uppercase font-semibold">
+                <tr>
+                  <th className="px-4 py-3">Booking ID</th>
+                  <th className="px-4 py-3">Guest Name</th>
+                  <th className="px-4 py-3">Room</th>
+                  <th className="px-4 py-3">Dates</th>
+                  <th className="px-4 py-3">Amount</th>
+                  <th className="px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100 font-medium">
+                {filteredBookings.length > 0 ? (
+                  filteredBookings.map((b) => (
+                    <tr key={b.id} className="hover:bg-orange-50/40 transition-colors">
+                      <td className="px-4 py-3.5 font-bold text-stone-900">{b.id}</td>
+                      <td className="px-4 py-3.5">
+                        <div>
+                          <div className="font-semibold text-stone-800">{b.guestName}</div>
+                          <div className="text-[10px] text-stone-400">{b.email}</div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span className="font-semibold text-stone-800">Room {b.roomNumber}</span>
+                        <div className="text-[10px] text-stone-400">{b.roomType}</div>
+                      </td>
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        {b.checkIn} to {b.checkOut}
+                      </td>
+                      <td className="px-4 py-3.5 font-bold text-stone-900">${b.amount}</td>
+                      <td className="px-4 py-3.5">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusBadge(
+                            b.status
+                          )}`}
+                        >
+                          {b.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="px-4 py-8 text-center text-stone-400">
+                      No bookings found matching "{searchTerm}"
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
+
       </div>
 
     </div>
