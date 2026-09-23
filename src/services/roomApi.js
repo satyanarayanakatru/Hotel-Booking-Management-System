@@ -9,7 +9,13 @@ const INITIAL_ROOM_IMAGES = [
   'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80',
   'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
   'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80'
+  'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1595576508898-0ad5c879a061?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1540518614846-7ede433c5173?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?auto=format&fit=crop&w=800&q=80'
 ]
 
 const ROOM_TYPES = ['Deluxe Suite', 'Executive Room', 'Standard Room', 'Presidential Suite']
@@ -22,7 +28,6 @@ const AMENITIES_LIST = [
 ]
 
 export const fetchRoomsFromApi = async () => {
-  // Check if rooms already exist in localStorage
   const storedRooms = localStorage.getItem(LOCAL_STORAGE_KEY)
   if (storedRooms) {
     try {
@@ -33,11 +38,9 @@ export const fetchRoomsFromApi = async () => {
   }
 
   try {
-    // Fetch Third-Party API data (DummyJSON)
     const response = await axios.get(API_URL)
     const products = response.data.products || []
 
-    // Enrich API data into hotel room schema
     const enrichedRooms = products.map((prod, index) => {
       const roomNum = `${(index % 4) + 1}0${(index % 9) + 1}`
       const type = ROOM_TYPES[index % ROOM_TYPES.length]
@@ -52,7 +55,7 @@ export const fetchRoomsFromApi = async () => {
         roomNumber: roomNum,
         roomType: type,
         pricePerNight: price,
-        capacity: (index % 3) + 2, // 2, 3, 4 guests
+        capacity: (index % 3) + 2,
         floorNumber: floor,
         availability: status,
         amenities: amenities,
@@ -65,14 +68,13 @@ export const fetchRoomsFromApi = async () => {
     return enrichedRooms
   } catch (error) {
     console.error('Third-Party API Error:', error)
-    // Fallback seed rooms if API is unreachable
-    const fallbackRooms = Array.from({ length: 8 }, (_, index) => ({
+    const fallbackRooms = Array.from({ length: 12 }, (_, index) => ({
       id: `room_fallback_${index + 1}`,
       roomNumber: `10${index + 1}`,
       roomType: ROOM_TYPES[index % ROOM_TYPES.length],
       pricePerNight: 150 + index * 45,
       capacity: (index % 3) + 2,
-      floorNumber: Math.floor(index / 2) + 1,
+      floorNumber: Math.floor(index / 3) + 1,
       availability: AVAILABILITY_STATUSES[index % 3],
       amenities: AMENITIES_LIST[index % AMENITIES_LIST.length],
       image: INITIAL_ROOM_IMAGES[index % INITIAL_ROOM_IMAGES.length],
@@ -110,7 +112,7 @@ export const createRoomService = (roomData) => {
     amenities: Array.isArray(roomData.amenities)
       ? roomData.amenities
       : roomData.amenities.split(',').map((a) => a.trim()),
-    image: roomData.image || INITIAL_ROOM_IMAGES[0],
+    image: roomData.image || INITIAL_ROOM_IMAGES[rooms.length % INITIAL_ROOM_IMAGES.length],
     description: roomData.description || 'Modern suite with premium furnishings.'
   }
 

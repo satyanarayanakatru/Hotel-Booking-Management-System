@@ -19,8 +19,6 @@ import {
   Pencil,
   Trash2,
   Users,
-  Layers,
-  Check,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
@@ -131,14 +129,12 @@ const Rooms = () => {
 
   const handleFormSubmit = (formData) => {
     if (activeRoom) {
-      // Update
       const updated = updateRoomService(activeRoom.id, formData)
       if (updated) {
         setRooms((prev) => prev.map((r) => (r.id === activeRoom.id ? updated : r)))
         toast.success(`Room ${formData.roomNumber} updated successfully!`)
       }
     } else {
-      // Create
       const newRoom = createRoomService(formData)
       setRooms((prev) => [newRoom, ...prev])
       toast.success(`Room ${formData.roomNumber} created successfully!`)
@@ -276,7 +272,7 @@ const Rooms = () => {
               key={i}
               className="bg-white rounded-3xl border border-stone-200 p-5 space-y-4 animate-pulse"
             >
-              <div className="h-44 bg-stone-200 rounded-2xl w-full" />
+              <div className="h-48 bg-stone-200 rounded-2xl w-full" />
               <div className="h-4 bg-stone-200 rounded w-2/3" />
               <div className="h-3 bg-stone-200 rounded w-1/2" />
               <div className="flex justify-between items-center pt-2">
@@ -302,7 +298,7 @@ const Rooms = () => {
         </div>
       )}
 
-      {/* Room Grid Display */}
+      {/* Room Grid Cards */}
       {!loading && !error && (
         <>
           {paginatedRooms.length > 0 ? (
@@ -312,7 +308,7 @@ const Rooms = () => {
                   key={room.id}
                   className="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
                 >
-                  {/* Card Top Image & Badges */}
+                  {/* Image Banner */}
                   <div className="relative h-48 w-full bg-stone-900 overflow-hidden">
                     <img
                       src={room.image}
