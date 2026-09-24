@@ -68,6 +68,17 @@ export const saveStoredGuests = (guests) => {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(guests))
 }
 
+export const updateGuestStatusById = (guestId, newStatus) => {
+  const guests = getStoredGuests()
+  const index = guests.findIndex((g) => g.id === guestId)
+  if (index !== -1) {
+    guests[index].status = newStatus
+    saveStoredGuests(guests)
+    return guests[index]
+  }
+  return null
+}
+
 // Live POST call to DummyJSON API
 export const createGuestService = async (guestData) => {
   let apiResponseData = null

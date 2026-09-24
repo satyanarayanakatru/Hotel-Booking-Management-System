@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { getStoredRooms, fetchRoomsFromApi } from './roomApi'
-import { getStoredGuests, fetchGuestsFromApi } from './guestApi'
+import { getStoredRooms, fetchRoomsFromApi, updateRoomAvailabilityByNumber } from './roomApi'
+import { getStoredGuests, fetchGuestsFromApi, updateGuestStatusById } from './guestApi'
 
 const LOCAL_STORAGE_KEY = 'hotel_bookings_data'
 
@@ -32,6 +32,7 @@ export const fetchBookingsFromApi = async (forceRefresh = false) => {
       checkIn: '2026-09-22',
       checkOut: '2026-09-25',
       status: 'Checked-In',
+      keycardNo: 'KC-304',
       createdAt: '2026-09-20'
     },
     {
@@ -41,6 +42,7 @@ export const fetchBookingsFromApi = async (forceRefresh = false) => {
       checkIn: '2026-09-22',
       checkOut: '2026-09-24',
       status: 'Checked-In',
+      keycardNo: 'KC-210',
       createdAt: '2026-09-21'
     },
     {
@@ -59,6 +61,7 @@ export const fetchBookingsFromApi = async (forceRefresh = false) => {
       checkIn: '2026-09-18',
       checkOut: '2026-09-21',
       status: 'Checked-Out',
+      keycardNo: 'KC-401',
       createdAt: '2026-09-15'
     },
     {
@@ -96,6 +99,7 @@ export const fetchBookingsFromApi = async (forceRefresh = false) => {
       taxAmount,
       totalAmount,
       status: b.status,
+      keycardNo: b.keycardNo || `KC-${b.room.roomNumber}`,
       createdAt: b.createdAt
     }
   })
@@ -216,12 +220,84 @@ export const createBookingService = async (bookingData) => {
     taxAmount,
     totalAmount,
     status: bookingData.status || 'Confirmed',
+    keycardNo: `KC-${bookingData.roomNumber}`,
     createdAt: new Date().toISOString().split('T')[0]
   }
 
   const updated = [newBooking, ...bookings]
   saveStoredBookings(updated)
   return newBooking
+}
+
+// Live Check-In Process API Call
+export const processCheckInService = async (bookingId, checkInData = {}) => {
+  try {
+    await axios.put('https://dummyjson.com/posts/1', {
+      title: `Check-In processed for ${bookingId}`,
+      status: 'Checked-In',
+      keycardNo: checkInData.keycardNo || 'KC-AUTO'
+    })
+  } catch (error) {
+    console.warn('API PUT call warning:', error)
+  }
+
+  const bookings = getStoredBookings()
+  const index = bookings.findIndex((b) => b.id === bookingId)
+
+  if (index !== -1) {
+    bookings[index].status = 'Checked-In'
+    bookings[index].keycardNo = checkInData.keycardNo || `KC-${bookings[index].roomNumber}`
+    bookings[index].checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    // Auto-update Room Status to 'Occupied'
+    updateRoomAvailabilityByNumber(bookings[index].roomNumber, 'Occupied')
+
+    // Auto-update Guest Status to 'Checked-In'
+    updateGuestStatusById(bookings[index].guestId, 'Checked-In')
+
+    saveStoredBookings(bookings)
+    return bookings[index]
+  }
+  return null
+}
+
+// Live Check-Out Process API Call
+export const processCheckOutService = async (bookingId, checkOutData = {}) => {
+  try {
+    await axios.put('https://dummyjson.com/posts/1', {
+      title: `Check-Out processed for ${bookingId}`,
+      status: 'Checked-Out',
+      finalAmount: checkOutData.finalAmount || 0
+    })
+  } catch (error) {
+    console.warn('API PUT call warning:', error)
+  }
+
+  const bookings = getStoredBookings()
+  const index = bookings.findIndex((b) => b.id === bookingId)
+
+  if (index !== -1) {
+    const extra = Number(checkOutData.extraCharges || 0)
+    const finalTotal = bookings[index].totalAmount + extra
+
+    bookings[index].status = 'Checked-Out'
+    bookings[index].extraCharges = extra
+    bookings[index].finalAmount = finalTotal
+    bookings[index].checkOutTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    // Auto-update Room Status to 'Available' (or specified status like 'Maintenance')
+    updateRoomAvailabilityByNumber(
+      bookings[index].roomNumber,
+      checkOutData.roomNextStatus || 'Available'
+    )
+
+    // Auto-update Guest Status to 'Checked-Out'
+    updateGuestStatusById(bookings[index].guestId, 'Checked-Out')
+
+    saveStoredBookings(bookings)
+    return bookings[index]
+  }
+  return null
 }
 
 // Live PUT call to DummyJSON API

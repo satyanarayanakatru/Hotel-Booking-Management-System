@@ -99,6 +99,17 @@ export const saveStoredRooms = (rooms) => {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(rooms))
 }
 
+export const updateRoomAvailabilityByNumber = (roomNumber, newAvailability) => {
+  const rooms = getStoredRooms()
+  const index = rooms.findIndex((r) => String(r.roomNumber) === String(roomNumber))
+  if (index !== -1) {
+    rooms[index].availability = newAvailability
+    saveStoredRooms(rooms)
+    return rooms[index]
+  }
+  return null
+}
+
 export const createRoomService = (roomData) => {
   const rooms = getStoredRooms()
   const newRoom = {
