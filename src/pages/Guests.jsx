@@ -113,24 +113,24 @@ const Guests = () => {
     setIsDeleteModalOpen(true)
   }
 
-  const handleFormSubmit = (formData) => {
+  const handleFormSubmit = async (formData) => {
     if (activeGuest) {
-      const updated = updateGuestService(activeGuest.id, formData)
+      const updated = await updateGuestService(activeGuest.id, formData)
       if (updated) {
         setGuests((prev) => prev.map((g) => (g.id === activeGuest.id ? updated : g)))
         toast.success(`Guest profile for ${formData.fullName} updated!`)
       }
     } else {
-      const newGuest = createGuestService(formData)
+      const newGuest = await createGuestService(formData)
       setGuests((prev) => [newGuest, ...prev])
       toast.success(`Guest ${formData.fullName} registered successfully!`)
     }
     setIsFormModalOpen(false)
   }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (guestToDelete) {
-      deleteGuestService(guestToDelete.id)
+      await deleteGuestService(guestToDelete.id)
       setGuests((prev) => prev.filter((g) => g.id !== guestToDelete.id))
       toast.success(`Guest record for ${guestToDelete.fullName} deleted.`)
     }
