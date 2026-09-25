@@ -3,28 +3,14 @@ import axios from 'axios'
 const LOCAL_STORAGE_KEY = 'hotel_guests_data'
 const API_URL = 'https://dummyjson.com/users?limit=12'
 
-export const fetchGuestsFromApi = async (forceRefresh = false) => {
-  // If stored and not forced, check if stored contains legacy mock data ('Sarah Jenkins')
-  const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
-  if (stored && !forceRefresh) {
-    try {
-      const parsed = JSON.parse(stored)
-      const isLegacyMockData = parsed.some((g) => g.fullName === 'Sarah Jenkins' || g.id === 'guest_101')
-      if (!isLegacyMockData && parsed.length > 0) {
-        return parsed
-      }
-    } catch {
-      console.warn('Parsing cached guests failed, re-fetching from API...')
-    }
-  }
-
-  // Fetch real users from DummyJSON Users API
+export const fetchGuestsFromApi = async () => {
+  // ALWAYS execute live HTTP API call so Network tab displays GET call on page load/refresh!
   try {
     const response = await axios.get(API_URL)
     const apiUsers = response.data.users || []
     const statusList = ['Active', 'Checked-In', 'Checked-Out', 'Active', 'Checked-In']
 
-    const enrichedGuests = apiUsers.map((user, index) => {
+    const fetchedGuests = apiUsers.map((user, index) => {
       const addressStr = user.address
         ? `${user.address.address}, ${user.address.city}, ${user.address.state}`
         : '100 Hotel Blvd, New York, NY'
@@ -44,11 +30,27 @@ export const fetchGuestsFromApi = async (forceRefresh = false) => {
       }
     })
 
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(enrichedGuests))
-    return enrichedGuests
+    // Preserve any manually added guest records from localStorage if present
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
+    let localCreatedGuests = []
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        // Keep guests created locally (e.g. timestamp-based IDs or custom entries)
+        localCreatedGuests = parsed.filter(
+          (g) => !g.id.startsWith('guest_') || Number(g.id.replace('guest_', '')) > 200
+        )
+      } catch {
+        console.warn('Failed to parse cached guests')
+      }
+    }
+
+    const mergedGuests = [...localCreatedGuests, ...fetchedGuests]
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedGuests))
+    return mergedGuests
   } catch (error) {
     console.error('Failed to fetch from DummyJSON Users API:', error)
-    return []
+    return getStoredGuests()
   }
 }
 

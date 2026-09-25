@@ -28,20 +28,12 @@ const AMENITIES_LIST = [
 ]
 
 export const fetchRoomsFromApi = async () => {
-  const storedRooms = localStorage.getItem(LOCAL_STORAGE_KEY)
-  if (storedRooms) {
-    try {
-      return JSON.parse(storedRooms)
-    } catch {
-      console.warn('Failed to parse cached rooms, re-fetching from API...')
-    }
-  }
-
+  // ALWAYS execute live HTTP API call so Network tab displays GET call on page load/refresh!
   try {
     const response = await axios.get(API_URL)
     const products = response.data.products || []
 
-    const enrichedRooms = products.map((prod, index) => {
+    const fetchedRooms = products.map((prod, index) => {
       const roomNum = `${(index % 4) + 1}0${(index % 9) + 1}`
       const type = ROOM_TYPES[index % ROOM_TYPES.length]
       const price = Math.round(prod.price * 2.5) + 100
@@ -64,25 +56,26 @@ export const fetchRoomsFromApi = async () => {
       }
     })
 
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(enrichedRooms))
-    return enrichedRooms
+    // Preserve any manually created rooms from localStorage if present
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
+    let localCreatedRooms = []
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        localCreatedRooms = parsed.filter(
+          (r) => !r.id.startsWith('room_') || Number(r.id.replace('room_', '')) > 1000
+        )
+      } catch {
+        console.warn('Failed to parse cached rooms')
+      }
+    }
+
+    const mergedRooms = [...localCreatedRooms, ...fetchedRooms]
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedRooms))
+    return mergedRooms
   } catch (error) {
     console.error('Third-Party API Error:', error)
-    const fallbackRooms = Array.from({ length: 12 }, (_, index) => ({
-      id: `room_fallback_${index + 1}`,
-      roomNumber: `10${index + 1}`,
-      roomType: ROOM_TYPES[index % ROOM_TYPES.length],
-      pricePerNight: 150 + index * 45,
-      capacity: (index % 3) + 2,
-      floorNumber: Math.floor(index / 3) + 1,
-      availability: AVAILABILITY_STATUSES[index % 3],
-      amenities: AMENITIES_LIST[index % AMENITIES_LIST.length],
-      image: INITIAL_ROOM_IMAGES[index % INITIAL_ROOM_IMAGES.length],
-      description: 'Elegant hotel room designed for relaxation and comfort.'
-    }))
-
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fallbackRooms))
-    return fallbackRooms
+    return getStoredRooms()
   }
 }
 
